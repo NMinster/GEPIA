@@ -73,29 +73,55 @@ def main():
     bp = gepia.boxplot()
     sur = gepia.survival()
 
-    # Perform boxplot analysis for up-regulated genes
-    for signature in sigs:
-        boxplot_analysis(bp, bp.params, signature)
+    # Read expression data from CSV files
+    OncoExp = pd.read_csv(os.path.join(mydir, 'OncoExp.csv'))
+    MammaExp = pd.read_csv(os.path.join(mydir, 'MammaExp.csv'))
+    GGIExp = pd.read_csv(os.path.join(mydir, 'GGIExp.csv'))
 
-    # Perform survival analysis for up-regulated genes
-    for signature in sigs:
-        survival_analysis(sur, sur.params, signature)
+    # Pulling up and down regulated genes
+    OncoUp = OncoExp[(OncoExp['Diff']>0)]
+    OncoDown = OncoExp[(OncoExp['Diff']<0)]
 
-    # Read data from GEPIA2 for log2TPM values
-    gene_lists_file = os.path.join(get_file_path(), '.gene_lists.csv')
+    MammaUp = MammaExp[(MammaExp['Diff']>0)]
+    MammaDown = MammaExp[(MammaExp['Diff']<0)]
 
-    # Load data into a pandas DataFrame
-    data = pd.read_csv(gene_lists_file)
+    GGIUp = GGIExp[(GGIExp['Diff']>0)]
+    GGIDown = GGIExp[(GGIExp['Diff']<0)]
 
-    # Plot histogram for log2(TPM) values
-    plot_histogram(data, 'Log2(TPM) Distribution')
+    # Convert the signatures into sets
+    up_regulated = [set(df['gene']) for df in [OncoUp, MammaUp, GGIUp]]
+    down_regulated = [set(df['gene']) for df in [OncoDown, MammaDown, GGIDown]]
 
-    # Save the histogram as a PDF file
-    plt.savefig(os.path.join(get_file_path(), 'log2tpm_histogram.pdf'))
+    # Plot Venn diagrams
+    labels = ('MammaPrint', 'OncotypeDx', 'GGI')
+    plot_venn_diagram(up_regulated, labels)
+    plot_venn_diagram(down_regulated, labels)
 
-    # Display the saved PDF file
-    IFrame(os.path.join(get_file_path(), 'log2tpm_histogram.pdf'), width=400, height=300)
+    # Perform boxplot and survival analysis for up-regulated genes
+    for up_genes in up_regulated:
+        boxplot_analysis(bp, bp.params, list(up_genes))
+        survival_analysis(sur, sur_params, list(up_genes))
+
+    # Perform boxplot and survival analysis for down-regulated genes
+    for down_genes in down_regulated:
+        boxplot_analysis(bp, bp.params, list(down_genes))
+        survival_analysis(sur, sur_params, list(down_genes))
+        
+        # Perform boxplot and survival analysis for up-regulated genes for each signature
+    for i, up_genes in enumerate(up_regulated):
+        signature_genes = signatures[i] & up_genes
+        print(f"Boxplot and survival analysis for up-regulated genes in {labels[i]} signature:")
+        boxplot_analysis(bp, bp.params, list(signature_genes))
+        survival_analysis(sur, sur.params, list(signature_genes))
+
+    # Perform boxplot and survival analysis for down-regulated genes for each signature
+    for i, down_genes in enumerate(down_regulated):
+        signature_genes = signatures[i] & down_genes
+        print(f"Boxplot and survival analysis for down-regulated genes in {labels[i]} signature:")
+        boxplot_analysis(bp, bp.params, list(signature_genes))
+        survival_analysis(sur, sur.params, list(signature_genes))
 
 
 if __name__ == '__main__':
     main()
+    
