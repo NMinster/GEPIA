@@ -49,30 +49,6 @@ def plot_histogram(data, title):
     pdf_g = stats.norm.pdf(lnspc, m, s)  # theoretical values
     plt.plot(lnspc, pdf_g)
 
-mydir= '/Users/NM/Documents/University/GMU/Spring2021/Baranova/'
-sur= gepia.survival()
-
-bp = gepia.boxplot()
-bp_params = bp.params
-bp.setOutDir(mydir)
-sur_params = sur.params
-sim = gepia.similar()
-
-cor = gepia.correlation()
-sur = gepia.survival()
-sur_map = gepia.survival_map()
-
-sur.setParam('dataset', ['BRCA'])
-sur_params = sur.params
-sur.setOutDir(mydir)
-
-sur_map.setParam('dataset', ['BRCA'])
-sur_mapparams = sur_map.params
-sur_map.setOutDir(mydir)
-
-outdir = mydir
-
-
 def main():
     # Set the working directory
     mydir = get_file_path()
@@ -99,11 +75,11 @@ def main():
 
     # Perform boxplot analysis for up-regulated genes
     for signature in sigs:
-        boxplot_analysis(bp, bp_params, signature)
+        boxplot_analysis(bp, bp.params, signature)
 
     # Perform survival analysis for up-regulated genes
     for signature in sigs:
-        survival_analysis(sur, sur_params, signature)
+        survival_analysis(sur, sur.params, signature)
 
     # Read data from GEPIA2 for log2TPM values
     gene_lists_file = os.path.join(get_file_path(), '.gene_lists.csv')
